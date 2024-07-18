@@ -1,9 +1,10 @@
 from pathlib import Path
 
 import click
+
+from dbt.cli.option_types import YAML, ChoiceTuple, Package, WarnErrorOptionsType
 from dbt.cli.options import MultiOption
-from dbt.cli.option_types import YAML, ChoiceTuple, WarnErrorOptionsType, Package
-from dbt.cli.resolvers import default_project_dir, default_profiles_dir
+from dbt.cli.resolvers import default_profiles_dir, default_project_dir
 from dbt.version import get_version_information
 
 add_package = click.option(
@@ -90,12 +91,6 @@ empty = click.option(
     is_flag=True,
 )
 
-enable_legacy_logger = click.option(
-    "--enable-legacy-logger/--no-enable-legacy-logger",
-    envvar="DBT_ENABLE_LEGACY_LOGGER",
-    hidden=True,
-)
-
 exclude = click.option(
     "--exclude",
     envvar=None,
@@ -138,6 +133,14 @@ full_refresh = click.option(
     envvar="DBT_FULL_REFRESH",
     help="If specified, dbt will drop incremental models and fully-recalculate the incremental table from the model definition.",
     is_flag=True,
+)
+
+host = click.option(
+    "--host",
+    envvar="DBT_HOST",
+    help="host to serve dbt docs on",
+    type=click.STRING,
+    default="127.0.0.1",
 )
 
 indirect_selection = click.option(
@@ -342,7 +345,7 @@ printer_width = click.option(
 
 profile = click.option(
     "--profile",
-    envvar=None,
+    envvar="DBT_PROFILE",
     help="Which existing profile to load. Overrides setting in dbt_project.yml.",
 )
 
@@ -391,21 +394,50 @@ record_timing_info = click.option(
 resource_type = click.option(
     "--resource-types",
     "--resource-type",
-    envvar=None,
+    envvar="DBT_RESOURCE_TYPES",
     help="Restricts the types of resources that dbt will include",
     type=ChoiceTuple(
         [
             "metric",
             "semantic_model",
+            "saved_query",
             "source",
             "analysis",
             "model",
             "test",
+            "unit_test",
             "exposure",
             "snapshot",
             "seed",
             "default",
             "all",
+        ],
+        case_sensitive=False,
+    ),
+    cls=MultiOption,
+    multiple=True,
+    default=(),
+)
+
+exclude_resource_type = click.option(
+    "--exclude-resource-types",
+    "--exclude-resource-type",
+    envvar="DBT_EXCLUDE_RESOURCE_TYPES",
+    help="Specify the types of resources that dbt will exclude",
+    type=ChoiceTuple(
+        [
+            "metric",
+            "semantic_model",
+            "saved_query",
+            "source",
+            "analysis",
+            "model",
+            "test",
+            "unit_test",
+            "exposure",
+            "snapshot",
+            "seed",
+            "default",
         ],
         case_sensitive=False,
     ),
@@ -574,7 +606,7 @@ store_failures = click.option(
 target = click.option(
     "--target",
     "-t",
-    envvar=None,
+    envvar="DBT_TARGET",
     help="Which target to load for the given profile",
 )
 
